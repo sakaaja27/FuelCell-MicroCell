@@ -20,18 +20,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
   StreamSubscription<bool>? _connectionSubscription;
   Timer? _offlineNotificationTimer;
 
+  String _previousAcsStatus = '';
+  String _previousInaStatus = '';
+  StreamSubscription<DeviceStatus>? _statusSubscription;
+
   @override
   void initState() {
     super.initState();
     _connectionSubscription =
         DeviceDataService.connectionStream().listen(_handleConnectionChange);
+    _statusSubscription =
+        DeviceDataService.statusStream().listen(_handleSensorStatus);
   }
 
   @override
   void dispose() {
     _connectionSubscription?.cancel();
+    _statusSubscription?.cancel();
     _offlineNotificationTimer?.cancel();
     super.dispose();
+  }
+
+  void _handleSensorStatus(DeviceStatus status) {
+    final messages = <String>[];
+
+    if (_previousAcsStatus.isNotEmpty &&
+        status.acs1Status != _previousAcsStatus) {
+      messages.add(_sensorMessage('Sensor ACS712', status.acs1Status));
+    }
+
+    if (_previousInaStatus.isNotEmpty &&
+        status.ina1Status != _previousInaStatus) {
+      messages.add(_sensorMessage('Sensor INA219', status.ina1Status));
+    }
+
+    _previousAcsStatus = status.acs1Status;
+    _previousInaStatus = status.ina1Status;
+
+    if (messages.isEmpty || !mounted) {
+      return;
+    }
+
+    final allConnected =
+        status.acs1Status == 'connected' && status.ina1Status == 'connected';
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(messages.join(' • ')),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor:
+              allConnected ? const Color(0xFF1B5E20) : Colors.redAccent,
+        ),
+      );
+  }
+
+  String _sensorMessage(String sensorName, String status) {
+    switch (status) {
+      case 'disconnected':
+        return '$sensorName terputus';
+      case 'error':
+        return '$sensorName pembacaan tidak valid';
+      case 'connected':
+        return '$sensorName kembali normal';
+      default:
+        return '$sensorName status: $status';
+    }
   }
 
   void _handleConnectionChange(bool isConnected) {

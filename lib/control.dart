@@ -27,74 +27,96 @@ class RelayControlScreen extends StatelessWidget {
             };
         final isAnyRelayActive = relays.values.any((value) => value);
 
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: Stack(
-            children: [
-              // Background Image
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: MediaQuery.of(context).size.height * 0.35,
-                child: Image.asset(
-                  'assets/images/cow.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: MediaQuery.of(context).size.height * 0.35,
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.5),
-                ),
-              ),
-              SafeArea(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildHeader(isAnyRelayActive),
-                      const SizedBox(height: 30),
-                      if (snapshot.hasError) _buildErrorNotice(),
-                      _buildRelayCard(
-                        context,
-                        title: 'Stop Kontak 1',
-                        relayKey: 'relay1',
-                        value: relays['relay1'] ?? false,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildRelayCard(
-                        context,
-                        title: 'Stop Kontak 2',
-                        relayKey: 'relay2',
-                        value: relays['relay2'] ?? false,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildRelayCard(
-                        context,
-                        title: 'Stop Kontak 3',
-                        relayKey: 'relay3',
-                        value: relays['relay3'] ?? false,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildRelayCard(
-                        context,
-                        title: 'Stop Kontak 4',
-                        relayKey: 'relay4',
-                        value: relays['relay4'] ?? false,
-                      ),
+        // Konfirmasi relay dari perangkat (/status/relayN)
+        return StreamBuilder<Map<String, bool>>(
+          stream: DeviceDataService.relayDeviceStatusStream(),
+          builder: (context, deviceSnapshot) {
+            final deviceStatus = deviceSnapshot.data;
 
-                      const SizedBox(height: 40),
+            // Koneksi ke Firebase realtime
+            return StreamBuilder<bool>(
+              stream: DeviceDataService.connectionStream(),
+              builder: (context, connectionSnapshot) {
+                final online = connectionSnapshot.data ?? true;
+
+                return Scaffold(
+                  backgroundColor: Colors.white,
+                  body: Stack(
+                    children: [
+                      // Background Image
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: MediaQuery.of(context).size.height * 0.35,
+                        child: Image.asset(
+                          'assets/images/cow.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: MediaQuery.of(context).size.height * 0.35,
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      SafeArea(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              _buildHeader(isAnyRelayActive),
+                              const SizedBox(height: 30),
+                              if (!online) _buildOfflineNotice(),
+                              if (snapshot.hasError) _buildErrorNotice(),
+                              _buildRelayCard(
+                                context,
+                                title: 'Stop Kontak 1',
+                                relayKey: 'relay1',
+                                value: relays['relay1'] ?? false,
+                                confirmed: deviceStatus?['relay1'],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildRelayCard(
+                                context,
+                                title: 'Stop Kontak 2',
+                                relayKey: 'relay2',
+                                value: relays['relay2'] ?? false,
+                                confirmed: deviceStatus?['relay2'],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildRelayCard(
+                                context,
+                                title: 'Stop Kontak 3',
+                                relayKey: 'relay3',
+                                value: relays['relay3'] ?? false,
+                                confirmed: deviceStatus?['relay3'],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildRelayCard(
+                                context,
+                                title: 'Stop Kontak 4',
+                                relayKey: 'relay4',
+                                value: relays['relay4'] ?? false,
+                                confirmed: deviceStatus?['relay4'],
+                              ),
+
+                              const SizedBox(height: 40),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ),
-            ],
-          ),
-          bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 1),
+                  bottomNavigationBar:
+                      const AppBottomNavigationBar(currentIndex: 1),
+                );
+              },
+            );
+          },
         );
       },
     );
@@ -262,12 +284,48 @@ class RelayControlScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildOfflineNotice() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+      ),
+      child: const Row(
+        children: [
+          Icon(
+            Icons.cloud_off,
+            color: Colors.redAccent,
+            size: 18,
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Gangguan komunikasi ke Firebase. Perintah relay akan tertunda sampai koneksi pulih.',
+              style: TextStyle(
+                color: Color(0xFFB71C1C),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRelayCard(
     BuildContext context, {
     required String title,
     required String relayKey,
     required bool value,
+    bool? confirmed,
   }) {
+    // Perintah belum dikonfirmasi perangkat (cek /status/relayN)
+    final awaiting = confirmed != null && confirmed != value;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -291,13 +349,28 @@ class RelayControlScreen extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                if (awaiting)
+                  const Text(
+                    'Menunggu konfirmasi perangkat…',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFB7791F),
+                    ),
+                  ),
+              ],
             ),
           ),
           GestureDetector(
@@ -335,7 +408,10 @@ class RelayControlScreen extends StatelessWidget {
     bool value,
   ) async {
     try {
-      await DeviceDataService.setRelay(relayKey, value);
+      // RTDB menggantung future saat offline (tidak throw),
+      // jadi kegagalan kirim butuh batas waktu sendiri
+      await DeviceDataService.setRelay(relayKey, value)
+          .timeout(const Duration(seconds: 5));
     } catch (_) {
       if (!context.mounted) {
         return;
@@ -343,7 +419,9 @@ class RelayControlScreen extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gagal mengubah relay. Periksa koneksi database.'),
+          content: Text(
+            'Gangguan komunikasi: perintah gagal terkirim ke database.',
+          ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.redAccent,
         ),

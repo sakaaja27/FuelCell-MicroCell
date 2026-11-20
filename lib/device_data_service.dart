@@ -37,6 +37,28 @@ class DeviceDataService {
     });
   }
 
+  /// Stream konfirmasi relay dari perangkat: ESP32 menulis ke
+  /// `devices/main/status/relayN` setelah relay benar-benar digerakkan.
+  /// Untuk membedakan "perintah terkirim" dari "perangkat mengonfirmasi".
+  static Stream<Map<String, bool>> relayDeviceStatusStream() {
+    return Stream.fromFuture(AppFirebase.ensureInitialized()).asyncExpand((_) {
+      return _deviceRef.child('status').onValue;
+    }).map((event) {
+      final value = event.snapshot.value;
+
+      if (value is! Map) {
+        return {'relay1': false, 'relay2': false, 'relay3': false, 'relay4': false};
+      }
+
+      return {
+        'relay1': _asBool(value['relay1'], false),
+        'relay2': _asBool(value['relay2'], false),
+        'relay3': _asBool(value['relay3'], false),
+        'relay4': _asBool(value['relay4'], false),
+      };
+    });
+  }
+
   static Future<void> setRelay(String relayKey, bool value) async {
     await AppFirebase.ensureInitialized();
 
@@ -197,6 +219,8 @@ class DeviceStatus {
     required this.weatherDescription,
     required this.location,
     required this.updatedAt,
+    this.acs1Status = 'connected',
+    this.ina1Status = 'connected',
   });
 
   /// Persentase daya baterai (0–100), dihitung dari acs1.voltage
@@ -225,6 +249,10 @@ class DeviceStatus {
   final String weatherDescription;
   final String location;
   final DateTime? updatedAt;
+
+  /// Status sensor dari Firebase: connected / error / disconnected
+  final String acs1Status;
+  final String ina1Status;
 
   factory DeviceStatus.defaults() {
     return const DeviceStatus(
@@ -293,6 +321,12 @@ class DeviceStatus {
     final status = deviceNode['status'];
     final statusMap = (status is Map) ? status : <dynamic, dynamic>{};
 
+    // --- Status sensor (connected / error / disconnected) ---
+    final acs1Status = ((acs1 is Map) ? acs1['status'] : null)?.toString() ??
+        'connected';
+    final ina1Status = ((ina1 is Map) ? ina1['status'] : null)?.toString() ??
+        'connected';
+
     return DeviceStatus(
       // 1. Daya Baterai: acs1.voltage → persen
       batteryLevel: _voltageToBatteryPercent(acs1Voltage),
@@ -331,6 +365,8 @@ class DeviceStatus {
       location: _readAny(statusMap, ['location', 'lokasi'])?.toString() ??
           fallback.location,
       updatedAt: _asDateTime(_readAny(statusMap, ['updatedAt', 'updated_at'])),
+      acs1Status: acs1Status,
+      ina1Status: ina1Status,
     );
   }
 
