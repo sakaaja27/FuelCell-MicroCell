@@ -12,7 +12,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['customer', 'schema'])->orderBy('created_at', 'desc')->paginate(10);
+        $orders = Order::with(['customerProfile', 'schema'])->orderBy('created_at', 'desc')->paginate(10);
         $customers = Customer::orderBy('nama')->get();
         $schemas = Schema::where('status', 'Aktif')->orderBy('skema')->get();
 

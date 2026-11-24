@@ -37,10 +37,20 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($orders as $order)
+                            @php
+                                $custProfile = $order->customerProfile ?? ($order->customer_id ? \App\Models\Customer::find($order->customer_id) : null);
+                                $customerName = $custProfile->nama ?? ($order->customer ?: 'Unknown');
+                                $customerPhone = $custProfile->phone ?? '-';
+                            @endphp
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-4 font-medium text-slate-500">{{ $loop->iteration }}</td>
                                 <td class="px-6 py-4 font-medium text-slate-900 search-target">{{ $order->id }}</td>
-                                <td class="px-6 py-4 text-slate-700 search-target">{{ $order->customer }}</td>
+                                <td class="px-6 py-4 text-slate-700 search-target">
+                                    <div class="font-medium text-slate-900">{{ $customerName }}</div>
+                                    @if($customerPhone !== '-')
+                                        <div class="text-xs text-slate-400">{{ $customerPhone }}</div>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-slate-600 search-target">
                                     {{ $order->skema }}
                                     @if($order->is_preorder)
@@ -56,7 +66,16 @@
                                 </td>
                                 <td class="px-6 py-4 text-slate-500 whitespace-nowrap search-target">{{ $order->tanggal }}</td>
                                 <td class="px-6 py-4 text-right space-x-1 whitespace-nowrap">
-                                    <button onclick="openDetailModal(this)" data-id="{{ $order->id }}" data-customer="{{ $order->customer->nama ?? 'Unknown' }}" data-alamat="{{ $order->alamat ?? '-' }}" data-total="Rp {{ number_format($order->total, 0, ',', '.') }}" data-tanggal="{{ $order->tanggal }}" data-status="{{ $order->status }}" data-image="{{ $order->image }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200" title="Detail">
+                                    <button onclick="openDetailModal(this)"
+                                        data-id="{{ $order->id }}"
+                                        data-customer="{{ $customerName }}"
+                                        data-phone="{{ $customerPhone }}"
+                                        data-alamat="{{ $order->alamat ?? '-' }}"
+                                        data-total="Rp {{ number_format($order->total, 0, ',', '.') }}"
+                                        data-tanggal="{{ $order->tanggal }}"
+                                        data-status="{{ $order->status }}"
+                                        data-image="{{ $order->image }}"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200" title="Detail">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                         <span>Detail</span>
                                     </button>
@@ -93,6 +112,15 @@
                     <div>
                         <p class="text-slate-500 mb-1">Pelanggan</p>
                         <p class="font-semibold text-slate-900" id="modalCustomer"></p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 mb-1">No. WhatsApp / HP</p>
+                        <div class="flex items-center gap-2">
+                            <p class="font-semibold text-emerald-600" id="modalPhone">-</p>
+                            <a href="#" id="modalWaLink" target="_blank" class="hidden inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-2 py-0.5 rounded-md transition-colors">
+                                <i data-lucide="message-circle" class="w-3 h-3"></i> Chat WA
+                            </a>
+                        </div>
                     </div>
                     <div>
                         <p class="text-slate-500 mb-1">Total</p>
@@ -275,6 +303,22 @@
         currentOrderId = btn.dataset.id;
         document.getElementById('modalId').textContent = btn.dataset.id;
         document.getElementById('modalCustomer').textContent = btn.dataset.customer;
+        
+        const phone = btn.dataset.phone || '-';
+        document.getElementById('modalPhone').textContent = phone;
+        const waLink = document.getElementById('modalWaLink');
+        if (phone && phone !== '-') {
+            // Format number for WA: if 0812... -> 62812...
+            let cleanPhone = phone.replace(/[^0-9]/g, '');
+            if (cleanPhone.startsWith('0')) {
+                cleanPhone = '62' + cleanPhone.substring(1);
+            }
+            waLink.href = 'https://wa.me/' + cleanPhone;
+            waLink.classList.remove('hidden');
+        } else {
+            waLink.classList.add('hidden');
+        }
+
         document.getElementById('modalAlamat').textContent = btn.dataset.alamat || '-';
         document.getElementById('modalTotal').textContent = btn.dataset.total;
         document.getElementById('modalTanggal').textContent = btn.dataset.tanggal;
