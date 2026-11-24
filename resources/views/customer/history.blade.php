@@ -39,6 +39,13 @@
                 <p class="font-medium text-sm">{{ session('success') }}</p>
             </div>
         @endif
+
+        @if (session('error'))
+            <div class="mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-300">
+                <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
+                <p class="font-medium text-sm">{{ session('error') }}</p>
+            </div>
+        @endif
         
         @php
             $subscriptions = Auth::user()->customer ? Auth::user()->customer->subscriptions()->where('status', 'Aktif')->get() : collect();
@@ -109,7 +116,7 @@
                         <p class="text-sm text-emerald-200/70">{{ $order->qty }} Unit &bull; Menggunakan {{ $order->paymentMethod->nama ?? 'Transfer' }}</p>
                     </div>
                     
-                    <div class="flex-shrink-0 md:text-right">
+                    <div class="flex-shrink-0 md:text-right flex flex-col items-start md:items-end">
                         <div class="text-sm text-emerald-100/60 mb-1">Total Pembayaran</div>
                         <div class="text-xl font-black text-emerald-300 mb-3">Rp {{ number_format($order->total, 0, ',', '.') }}</div>
                         
@@ -130,8 +137,16 @@
                             };
                         @endphp
                         
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold {{ $statusColor }}">
-                            <i data-lucide="{{ $statusIcon }}" class="w-3.5 h-3.5"></i> {{ $order->status }}
+                        <div class="flex items-center gap-3">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold {{ $statusColor }}">
+                                <i data-lucide="{{ $statusIcon }}" class="w-3.5 h-3.5"></i> {{ $order->status }}
+                            </div>
+
+                            @if(in_array($order->status, ['Proses', 'Selesai']))
+                                <a href="{{ route('customer.invoice', $order->id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500 hover:text-emerald-950 text-xs font-bold transition-all shadow-sm">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Unduh Invoice
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>

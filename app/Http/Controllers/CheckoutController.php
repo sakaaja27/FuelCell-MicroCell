@@ -119,4 +119,27 @@ class CheckoutController extends Controller
 
         return view('customer.history', compact('orders'));
     }
+
+    public function invoice(Order $order)
+    {
+        $user = Auth::user();
+        $customer = $user->customer;
+
+        // Pastikan hanya pemilik order yang bisa mengunduh
+        if (!$customer || $order->customer_id !== $customer->id) {
+            abort(403, 'Anda tidak memiliki hak akses untuk mengunduh invoice ini.');
+        }
+
+        // Invoice hanya tersedia untuk pesanan yang sudah selesai (atau diproses)
+        if (!in_array($order->status, ['Proses', 'Selesai'])) {
+            return back()->with('error', 'Invoice hanya tersedia setelah pembayaran diproses atau selesai.');
+        }
+
+        $order->load(['customer', 'schema', 'paymentMethod']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('orders.invoice', compact('order'));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download('Invoice-' . $order->id . '.pdf');
+    }
 }

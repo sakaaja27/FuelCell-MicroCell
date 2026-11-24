@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
 // Route khusus customer
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/riwayat-transaksi', [\App\Http\Controllers\CheckoutController::class, 'history'])->name('customer.history');
+    Route::get('/riwayat-transaksi/{order}/invoice', [\App\Http\Controllers\CheckoutController::class, 'invoice'])->name('customer.invoice');
     Route::get('/order/{schema}', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('customer.checkout');
     Route::post('/order/{schema}', [\App\Http\Controllers\CheckoutController::class, 'store'])->name('customer.checkout.store');
 });
