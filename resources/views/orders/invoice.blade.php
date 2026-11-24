@@ -50,6 +50,9 @@
                 <p><strong>{{ $realCustomer->nama ?? $order->customer }}</strong></p>
                 <p>{{ $realCustomer->email ?? '-' }}</p>
                 <p>{{ $realCustomer->phone ?? '-' }}</p>
+                @if($order->alamat)
+                    <p style="margin-top: 5px; color: #555;"><strong>Alamat:</strong> {{ $order->alamat }}</p>
+                @endif
             </div>
             <div class="details-col" style="text-align: right;">
                 <h4>Metode Pembayaran:</h4>

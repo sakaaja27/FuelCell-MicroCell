@@ -18,6 +18,11 @@ class Order extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+    public function customerProfile(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
     public function schema(): BelongsTo
     {
         return $this->belongsTo(Schema::class, 'schema_id');

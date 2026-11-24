@@ -56,7 +56,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-slate-500 whitespace-nowrap search-target">{{ $order->tanggal }}</td>
                                 <td class="px-6 py-4 text-right space-x-1 whitespace-nowrap">
-                                    <button onclick="openDetailModal(this)" data-id="{{ $order->id }}" data-customer="{{ $order->customer->nama ?? 'Unknown' }}" data-total="Rp {{ number_format($order->total, 0, ',', '.') }}" data-tanggal="{{ $order->tanggal }}" data-status="{{ $order->status }}" data-image="{{ $order->image }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200" title="Detail">
+                                    <button onclick="openDetailModal(this)" data-id="{{ $order->id }}" data-customer="{{ $order->customer->nama ?? 'Unknown' }}" data-alamat="{{ $order->alamat ?? '-' }}" data-total="Rp {{ number_format($order->total, 0, ',', '.') }}" data-tanggal="{{ $order->tanggal }}" data-status="{{ $order->status }}" data-image="{{ $order->image }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200" title="Detail">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                         <span>Detail</span>
                                     </button>
@@ -101,6 +101,10 @@
                     <div>
                         <p class="text-slate-500 mb-1">Tanggal</p>
                         <p class="font-semibold text-slate-900" id="modalTanggal"></p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-slate-500 mb-1">Alamat</p>
+                        <p class="font-semibold text-slate-900" id="modalAlamat">-</p>
                     </div>
                 </div>
 
@@ -192,6 +196,11 @@
                     <label for="form_is_preorder" class="text-sm font-medium text-slate-700">Jadikan Pre-Order (Abaikan Stok Alat)</label>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Alamat Pengiriman / Pemasangan</label>
+                    <textarea name="alamat" id="form_alamat" rows="2" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3" placeholder="Masukkan alamat lengkap"></textarea>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
@@ -266,6 +275,7 @@
         currentOrderId = btn.dataset.id;
         document.getElementById('modalId').textContent = btn.dataset.id;
         document.getElementById('modalCustomer').textContent = btn.dataset.customer;
+        document.getElementById('modalAlamat').textContent = btn.dataset.alamat || '-';
         document.getElementById('modalTotal').textContent = btn.dataset.total;
         document.getElementById('modalTanggal').textContent = btn.dataset.tanggal;
         document.getElementById('modalStatus').value = btn.dataset.status;

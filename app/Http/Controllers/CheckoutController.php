@@ -37,6 +37,7 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'qty' => ['required', 'integer', 'min:1'],
             'duration' => ['nullable', 'integer', 'min:1'],
+            'alamat' => ['required', 'string', 'max:1000'],
             'payment_method_id' => ['required', 'exists:payment_methods,id'],
             'image' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ]);
@@ -92,6 +93,7 @@ class CheckoutController extends Controller
             'schema_id' => $schema->id,
             'payment_method_id' => $validated['payment_method_id'],
             'customer' => $customer->nama,
+            'alamat' => $validated['alamat'],
             'skema' => $schema->skema,
             'qty' => $validated['qty'],
             'duration' => $duration,

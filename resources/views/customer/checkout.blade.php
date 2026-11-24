@@ -82,6 +82,10 @@
                         </div>
                     </div>
 
+                    @php
+                        $isAfterSales = stripos($schema->skema, 'after-sales') !== false || stripos($schema->skema, 'after sales') !== false || stripos($schema->skema, 'instalasi') !== false || stripos($schema->satuan, 'kunjungan') !== false;
+                    @endphp
+
                     @if(isset($subscription) && $subscription)
                         <input type="hidden" name="subscription_id" value="{{ $subscription->id }}">
                         <input type="hidden" name="qty" id="qty" value="{{ $subscription->order->qty ?? 1 }}">
@@ -95,6 +99,18 @@
                             <div class="flex justify-between pt-1">
                                 <span>Total Kontrak</span>
                                 <strong class="text-white">{{ $subscription->total_months }} Bulan</strong>
+                            </div>
+                        </div>
+                    @elseif($isAfterSales)
+                        <!-- After Sales: 1 kunjungan servis, input Qty di-hide -->
+                        <input type="hidden" name="qty" id="qty" value="1">
+                        <div class="mt-6 p-4 bg-[#041706]/80 border border-emerald-800/50 rounded-xl flex items-center gap-3 text-sm text-emerald-100/80">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                                <i data-lucide="wrench" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-white">Layanan Kunjungan & Servis</p>
+                                <p class="text-xs text-emerald-200/60 mt-0.5">Biaya berlaku untuk 1x kunjungan teknisi ke lokasi peternakan Anda.</p>
                             </div>
                         </div>
                     @elseif(stripos($schema->skema, 'sewa') !== false || stripos($schema->satuan, 'bulan') !== false)
@@ -119,6 +135,17 @@
                             <input type="number" name="qty" id="qty" value="1" min="1" class="w-32 bg-[#041706] border border-emerald-800/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent p-3 text-center text-lg font-bold" required onchange="updateTotal()">
                         </div>
                     @endif
+
+                    <!-- Alamat Pengiriman / Pemasangan -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-bold text-emerald-100 mb-2 flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i> Alamat Lengkap Pengiriman / Lokasi Pemasangan
+                        </label>
+                        <textarea name="alamat" id="alamat" rows="3" required placeholder="Masukkan alamat lengkap (jalan, nomor rumah/gedung, RT/RW, kelurahan, kecamatan, kota/kabupaten, kode pos)" class="w-full bg-[#041706] border border-emerald-800/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent p-3 text-sm placeholder:text-emerald-100/40"></textarea>
+                        @error('alamat')
+                            <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Metode Pembayaran -->
@@ -181,8 +208,8 @@
                             <span class="font-bold text-white" id="hargaSatuan" data-harga="{{ $finalHarga }}">Rp {{ number_format($finalHarga, 0, ',', '.') }}</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
-                            <span class="text-emerald-100/70">Jumlah</span>
-                            <span class="font-bold text-white" id="qtyText">1x</span>
+                            <span class="text-emerald-100/70">{{ $isAfterSales ? 'Kunjungan' : 'Jumlah' }}</span>
+                            <span class="font-bold text-white" id="qtyText">{{ $isAfterSales ? '1x Kunjungan Servis' : '1x' }}</span>
                         </div>
                         <div class="h-px bg-emerald-800/50 w-full my-4"></div>
                         <div class="flex justify-between items-end">
@@ -208,6 +235,7 @@
         
         const availableStock = {{ $availableStock ?? 0 }};
         const isUnit = {{ stripos($schema->skema, 'Unit') !== false ? 'true' : 'false' }};
+        const isAfterSales = {{ $isAfterSales ? 'true' : 'false' }};
 
         function setDuration(val) {
             document.getElementById('duration').value = val;
@@ -228,7 +256,9 @@
             const total = qty * harga; // Pay per month
             
             let qtyText = qty + 'x';
-            if (durationInput) {
+            if (isAfterSales) {
+                qtyText = '1x Kunjungan Servis';
+            } else if (durationInput) {
                 qtyText = qty + ' Unit (Kontrak ' + duration + ' Bulan)';
             }
             

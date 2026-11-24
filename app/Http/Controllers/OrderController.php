@@ -24,6 +24,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', 'exists:customers,id'],
             'schema_id' => ['required', 'exists:schemas,id'],
+            'alamat' => ['nullable', 'string', 'max:1000'],
             'qty' => ['required', 'integer', 'min:1'],
             'duration' => ['nullable', 'integer', 'min:1'],
             'status' => ['required', 'in:Menunggu,Proses,Selesai,Dibatalkan'],
@@ -63,6 +64,7 @@ class OrderController extends Controller
             'customer_id' => $customer->id,
             'schema_id' => $schema->id,
             'customer' => $customer->nama,
+            'alamat' => $validated['alamat'] ?? null,
             'skema' => $schema->skema,
             'qty' => $validated['qty'],
             'duration' => $validated['duration'] ?? null,
