@@ -20,6 +20,10 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install esp32:esp32
 
+      - name: Install Required Libraries
+        run: |
+          arduino-cli lib install "WiFiManager"
+
       - name: Compile Sketch
         run: arduino-cli compile --fqbn esp32:esp32:esp32wrover microcell_iot/microcell_iot.ino
 
