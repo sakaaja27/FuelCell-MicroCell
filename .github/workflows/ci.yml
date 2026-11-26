@@ -13,14 +13,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v1
+        uses: arduino/setup-arduino-cli@v2
 
-      - name: Install ESP32 Core
+      - name: Install ESP32 Platform
         run: |
-          arduino-cli config init
           arduino-cli core update-index
-          arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core install esp32:esp32
 
       - name: Compile Sketch
-        run: arduino-cli compile --fqbn esp32:esp32:esp32 microcell_iot/microcell_iot.ino
+        run: arduino-cli compile --fqbn esp32:esp32:esp32wrover microcell_iot/microcell_iot.ino
 
