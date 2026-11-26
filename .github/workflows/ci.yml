@@ -1,0 +1,30 @@
+name: AppMobile CI
+
+on:
+  push:
+    branches: [ AppMobile ]
+  pull_request:
+    branches: [ AppMobile ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build APK (Debug)
+        run: flutter build apk --debug
