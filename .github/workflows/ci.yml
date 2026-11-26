@@ -23,7 +23,8 @@ jobs:
       - name: Install Required Libraries
         run: |
           arduino-cli lib install "WiFiManager"
+          arduino-cli lib install "Firebase Client Library for ESP8266 and ESP32"
 
       - name: Compile Sketch
-        run: arduino-cli compile --fqbn esp32:esp32:esp32 --libraries ./microcell_iot microcell_iot/microcell_iot.ino
+        run: arduino-cli compile --fqbn esp32:esp32:esp32 microcell_iot/microcell_iot.ino
 
