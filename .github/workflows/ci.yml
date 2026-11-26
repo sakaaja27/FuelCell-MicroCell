@@ -25,5 +25,5 @@ jobs:
           arduino-cli lib install "WiFiManager"
 
       - name: Compile Sketch
-        run: arduino-cli compile --fqbn esp32:esp32:esp32wrover microcell_iot/microcell_iot.ino
+        run: arduino-cli compile --fqbn esp32:esp32:esp32 --libraries ./microcell_iot microcell_iot/microcell_iot.ino
 
